@@ -45,7 +45,7 @@ DEFAULT_CHANNEL_NAME = "team"
 DEFAULT_OUTPUT_DIR = "./work-rule-mtg/"
 DEFAULT_WINDOW_DAYS = 60
 
-WORK_RULE_MTG_TAG = /#ワークルールMTG/
+WORK_RULE_MTG_REGEX = /アクションプラン/
 
 class WorkRuleMtgExporter
   def initialize(client:, base_url:, team_name:, channel_name:, username:, from_date:, to_date:, out_dir:, overwrite:, window_days: DEFAULT_WINDOW_DAYS)
@@ -112,12 +112,12 @@ class WorkRuleMtgExporter
     date_windows(@from_date, @to_date, @window_days).each do |win_from, win_to|
       say "  searching window #{win_from} .. #{win_to}..."
       # after:/before: は境界日を含まないため、1日ずらして指定する
-      terms = "#ワークルールMTG in:#{@channel_name} after:#{win_from - 1} before:#{win_to + 1}"
+      terms = "アクションプラン in:#{@channel_name} after:#{win_from - 1} before:#{win_to + 1}"
       response = @client.post(
         "/api/v4/teams/#{team_id}/posts/search",
         { "terms" => terms, "is_or_search" => false }
       )
-
+      
       order = response.fetch("order")
       next if order.empty?
 
@@ -125,7 +125,12 @@ class WorkRuleMtgExporter
 
       chunk.each do |post|
         next if user_id && post["user_id"] != user_id
-        next unless work_rule_mtg_post?(post)
+        unless work_rule_mtg_post?(post)
+          puts '  - false'
+          puts post["user_name"] 
+          puts "  - message: #{post["message"]}"
+          next 
+        end
 
         posts << post
       end
@@ -147,7 +152,7 @@ class WorkRuleMtgExporter
   end
 
   def work_rule_mtg_post?(post)
-    WORK_RULE_MTG_TAG.match?(post["message"].to_s)
+    WORK_RULE_MTG_REGEX.match?(post["message"].to_s)
   end
 
   def report_file_path(username, date)
