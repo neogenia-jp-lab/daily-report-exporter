@@ -1,5 +1,37 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
+#
+# export_work-rule_refrections.rb
+#
+# Mattermost の チーム改善（team）チャンネルから、#ワークルールMTG タグのついた
+# 投稿を取得して Markdown ファイルとして保存するスクリプト。
+#
+# 【仕様】
+#   - 対象チャンネル : team（デフォルト）
+#   - ユーザー指定   : --member（省略時は全メンバーが対象）
+#   - 期間指定       : --from / --to（JST、両端含む）
+#   - 投稿判定       : 本文に #ワークルールMTG を含む
+#   - 取得方式       : 検索APIを日付ウィンドウ（デフォルト60日）に分割して呼び出し
+#                      （検索APIの上限件数制限を回避するため）
+#   - 保存形式       : {out_dir}/{username}/YYYY-MM-DD.md
+#   - 既存ファイル   : デフォルトはスキップ、-w で上書き
+#
+# 【コマンドラインオプション】
+#   --member USERNAME   取得対象の Mattermost ユーザー名（省略時は全員）
+#   --from YYYY-MM-DD   取得期間 FROM（必須）
+#   --to   YYYY-MM-DD   取得期間 TO（必須）
+#   --out  DIR          出力先ディレクトリ（省略時: ./work-rule-mtg/）
+#   --window-days N     検索ウィンドウのサイズ（日数、省略時: 60）
+#   -w                  既存ファイルを上書き
+#   -k                  SSL証明書の検証をスキップ
+#   -v                  詳細ログ出力
+#   -h                  ヘルプ表示
+#
+# 【環境変数】
+#   MATTERMOST_TOKEN    パーソナルアクセストークン（必須）
+#   MATTERMOST_BASE_URL サーバーURL（省略時: https://chat.neogenia.co.jp/）
+#   MATTERMOST_TEAM     チーム名スラッグ（省略時: Neogenia）
+#   MATTERMOST_CHANNEL  チャンネル名スラッグ（省略時: team）
 
 require "date"
 require "fileutils"

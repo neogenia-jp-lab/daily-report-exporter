@@ -1,5 +1,35 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
+#
+# export_daily_reports.rb
+#
+# Mattermost の times チャンネルから、ユーザーごとの業務日報投稿を取得して
+# Markdown ファイルとして保存するスクリプト。
+#
+# 【仕様】
+#   - 対象チャンネル : times（デフォルト）
+#   - ユーザー指定   : --member（必須）
+#   - 期間指定       : --from / --to（JST、両端含む）
+#   - 日報判定       : スレッド内投稿の本文が REPORT_PATTERNS にマッチ
+#   - 保存形式       : {out_dir}/{username}/YYYY-MM-DD.md
+#   - 既存ファイル   : デフォルトはスキップ、-w で上書き
+#   - 候補複数時     : 当日の最後の投稿を保存
+#
+# 【コマンドラインオプション】
+#   --member USERNAME   取得対象の Mattermost ユーザー名（必須）
+#   --from YYYY-MM-DD   取得期間 FROM（必須）
+#   --to   YYYY-MM-DD   取得期間 TO（必須）
+#   --out  DIR          出力先ディレクトリ（省略時: ./times/）
+#   -w                  既存ファイルを上書き
+#   -k                  SSL証明書の検証をスキップ
+#   -v                  詳細ログ出力
+#   -h                  ヘルプ表示
+#
+# 【環境変数】
+#   MATTERMOST_TOKEN    パーソナルアクセストークン（必須）
+#   MATTERMOST_BASE_URL サーバーURL（省略時: https://chat.neogenia.co.jp/）
+#   MATTERMOST_TEAM     チーム名スラッグ（省略時: Neogenia）
+#   MATTERMOST_CHANNEL  チャンネル名スラッグ（省略時: times）
 
 require "date"
 require "fileutils"
